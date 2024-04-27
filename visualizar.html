@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visualizar e Atualizar Chamados</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 2px solid purple;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .chamado {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .campo {
+        margin-bottom: 10px;
+    }
+
+    label {
+        display: block;
+        font-weight: bold;
+    }
+
+    input[type="checkbox"] {
+        margin-right: 5px;
+    }
+
+    textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    button {
+        padding: 8px 15px;
+        background-color: purple;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #6a0dad;
+    }
+</style>
+</head>
+<body>
+    <div class="container" id="chamadosContainer">
+        
+    </div>
+    
+    <script>
+        function fetchChamados() {
+            fetch('https://parseapi.back4app.com/classes/Chamado', {
+                method: 'GET',
+                headers: {
+                    'X-Parse-Application-Id': 's1IxvWYIVROE0MXb1DZ3OliZQx27Iebs1sUOPE2T',
+                    'X-Parse-REST-API-Key': 'SsAklOZbVg4cwify9sUsiA76RaTXHtr9NCbaBeju',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("chamadosContainer").innerHTML = "";
+                data.results.forEach(chamado => {
+                    const chamadoDiv = document.createElement("div");
+                    chamadoDiv.classList.add("chamado");
+                    chamadoDiv.innerHTML = `
+                        <div class="campo">
+                            <h3>Nome: ${chamado.nome}</h3>
+                        </div>
+                        <div class="campo">
+                            <h3>Email: ${chamado.email}</h3>
+                        </div>
+                        <div class="campo">
+                            <h3>Assunto: ${chamado.assunto}</h3>
+                        </div>
+                        <div class="campo">
+                            <h3>Mensagem: ${chamado.mensagem}</h3>
+                        </div>
+                        <div class="campo">
+                            <label for="finalizado-${chamado.objectId}">Finalizado</label>
+                            <input type="checkbox" id="finalizado-${chamado.objectId}" ${chamado.finalizado ? 'checked' : ''}>
+                        </div>
+                        <div class="campo">
+                            <label for="resposta-${chamado.objectId}">Mensagem de Resposta:</label>
+                            <textarea id="resposta-${chamado.objectId}">${chamado.resposta}</textarea>
+                        </div>
+                        <div class="campo">
+                            <button onclick="atualizarChamado('${chamado.objectId}')">Salvar</button>
+                        </div>
+                    `;
+                    document.getElementById("chamadosContainer").appendChild(chamadoDiv);
+                });
+            })
+            .catch(error => console.error('Erro:', error));
+        }
+
+        function atualizarChamado(chamadoId) {
+            const finalizado = document.querySelector(`#finalizado-${chamadoId}`).checked;
+            const resposta = document.querySelector(`#resposta-${chamadoId}`).value;
+
+            fetch(`https://parseapi.back4app.com/classes/Chamado/${chamadoId}`, {
+                method: 'PUT',
+                headers: {
+                    'X-Parse-Application-Id': 's1IxvWYIVROE0MXb1DZ3OliZQx27Iebs1sUOPE2T',
+                    'X-Parse-REST-API-Key': 'SsAklOZbVg4cwify9sUsiA76RaTXHtr9NCbaBeju',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    finalizado: finalizado,
+                    resposta: resposta
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Sucesso:', data);
+                alert('Chamado atualizado com sucesso!');
+                fetchChamados();
+            })
+            .catch((error) => {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar o chamado. Por favor, tente novamente mais tarde.');
+            });
+        }
+        fetchChamados();
+    </script>
+</body>
+</html>
